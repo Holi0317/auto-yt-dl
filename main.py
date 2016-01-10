@@ -78,7 +78,7 @@ def list_playlist(http, playlists):
             result_id[title] += list(map(lambda x: x['id'], response['items']))
             result_vid_id[title] += list(map(map_vid, response['items']))
 
-            response = endpoint(part='id', playlistId=playlist['id'],
+            response = endpoint(part='id,snippet', playlistId=playlist['id'],
                                 pageToken=response['nextPageToken']).execute()
 
         result_id[title] += list(map(lambda x: x['id'], response['items']))
