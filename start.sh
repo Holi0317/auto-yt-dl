@@ -2,6 +2,6 @@
 
 source env/bin/activate
 chmod +x main.py
-./main.py || exit $?
+pip install youtube-dl pip --upgrade
 
-pip install youtube-dl --upgrade
+./main.py || exit $?
