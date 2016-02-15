@@ -4,6 +4,7 @@ import argparse
 import os
 import json
 import logging
+import sys
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
@@ -12,6 +13,7 @@ from apiclient.discovery import build
 from httplib2 import Http
 import youtube_dl
 
+LOCK_FILE = 'auto-yt-dl.lock'
 YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.force-ssl'
 
 parser = argparse.ArgumentParser(parents=[tools.argparser])
@@ -115,6 +117,7 @@ def download_videos(video_ids, dir, options):
 
 def main():
     logger.info('Started')
+
     storage = Storage('credentials')
     creds = storage.get()
 
@@ -148,4 +151,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if LOCK_FILE in os.listdir():
+        logger.info('Lock file found. Exiting.')
+        sys.exit(0)
+    open(LOCK_FILE, 'a').close()
+    try:
+        main()
+    finally:
+        logger.info('Cleaning up lock file.')
+        os.remove(os.path.abspath(LOCK_FILE))
