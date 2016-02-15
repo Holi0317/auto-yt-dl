@@ -5,16 +5,13 @@
       "postprocessors": [{
         "key": "FFmpegExtractAudio",
         "preferredcodec": "vorbis"
-        }]
-      }
-    },
-    "yt-dl-video": {
-      "dest": "~/Sync/default",
-      "options": {
-        "postprocessors": [{
-          "key": "FFmpegVideoConvertor",
-          "preferedformat": "mp4"
-        }]
-      }
+      }]
+    }
+  },
+  "yt-dl-video": {
+    "dest": "~/Sync/default",
+    "options": {
+      
     }
   }
+}
