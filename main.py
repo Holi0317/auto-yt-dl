@@ -15,6 +15,7 @@ import youtube_dl
 
 LOCK_FILE = 'auto-yt-dl.lock'
 YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.force-ssl'
+THIS_DIR = os.getcwd()
 
 parser = argparse.ArgumentParser(parents=[tools.argparser])
 flags = parser.parse_args()
@@ -159,4 +160,4 @@ if __name__ == '__main__':
         main()
     finally:
         logger.info('Cleaning up lock file.')
-        os.remove(os.path.abspath(LOCK_FILE))
+        os.remove(os.path.join(THIS_DIR, LOCK_FILE))
