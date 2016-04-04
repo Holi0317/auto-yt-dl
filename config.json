@@ -1,6 +1,6 @@
 {
   "yt-dl-audio": {
-    "dest": "~/Music",
+    "dest": "~/Music/",
     "options": {
       "postprocessors": [{
         "key": "FFmpegExtractAudio",
@@ -9,9 +9,11 @@
     }
   },
   "yt-dl-video": {
-    "dest": "~/Sync/default",
+    "dest": "~/Sync/default/",
     "options": {
-      
+      "postprocessors": [{
+
+      }]
     }
   }
 }

@@ -12,6 +12,7 @@ from oauth2client import tools
 from apiclient.discovery import build
 from httplib2 import Http
 import youtube_dl
+from youtube_dl.utils import DEFAULT_OUTTMPL
 
 LOCK_FILE = 'auto-yt-dl.lock'
 YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.force-ssl'
@@ -91,7 +92,7 @@ def list_playlist(http, playlists):
 
     logger.debug('Playlists listed. Result:')
     logger.debug(result_id)
-    return (result_id, result_vid_id)
+    return result_id, result_vid_id
 
 
 def remove_playlist(http, playlist):
@@ -105,12 +106,16 @@ def remove_playlist(http, playlist):
         endpoint(id=item).execute()
 
 
-def download_videos(video_ids, dir, options):
-    os.chdir(os.path.expanduser(dir))
+def download_videos(video_ids, dir_, options):
+    dir = os.path.expanduser(dir_)
+    if 'outtmpl' in options:
+        options['outtmpl'] = dir + options['outtmpl']
+    else:
+        options['outtmpl'] = dir + DEFAULT_OUTTMPL
     video_links = ['http://www.youtube.com/watch?v=' + video_id
                    for video_id in video_ids]
     logger.info('Attempting to download videos. %s', video_links)
-    logger.info('Video will be saved to %s', os.path.expanduser(dir))
+    logger.info('Video will be saved to %s', dir)
 
     with youtube_dl.YoutubeDL(options) as ydl:
         ydl.download(video_links)
