@@ -11,9 +11,7 @@
   "yt-dl-video": {
     "dest": "~/Sync/default/",
     "options": {
-      "postprocessors": [{
-
-      }]
+      
     }
   }
 }
