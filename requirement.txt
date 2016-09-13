@@ -1,2 +1,2 @@
-google-api-python-client==1.4.2
+google-api-python-client==1.5.3
 youtube-dl>=2016.1.9
