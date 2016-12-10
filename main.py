@@ -106,16 +106,19 @@ def remove_playlist(http, playlist):
         endpoint(id=item).execute()
 
 
+def normalize_path(path):
+    p = os.path.expanduser(path)
+    p = os.path.normpath(p)
+    p = os.path.join(p, '')
+    return p
+
+
 def download_videos(video_ids, dir_, options):
-    dir = os.path.expanduser(dir_)
-    if 'outtmpl' in options:
-        options['outtmpl'] = dir + options['outtmpl']
-    else:
-        options['outtmpl'] = dir + DEFAULT_OUTTMPL
+    options['outtmpl'] = os.path.join(normalize_path(dir_), options.get('outtmpl', DEFAULT_OUTTMPL))
     video_links = ['http://www.youtube.com/watch?v=' + video_id
                    for video_id in video_ids]
     logger.info('Attempting to download videos. %s', video_links)
-    logger.info('Video will be saved to %s', dir)
+    logger.info('Video will be saved as %s', options['outtmpl'])
 
     with youtube_dl.YoutubeDL(options) as ydl:
         ydl.download(video_links)
