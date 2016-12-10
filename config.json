@@ -9,7 +9,7 @@
     }
   },
   "yt-dl-video": {
-    "dest": "~/Sync/default/",
+    "dest": "~/Sync/default/video/",
     "options": {
       
     }
