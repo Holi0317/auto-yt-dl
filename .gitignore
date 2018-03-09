@@ -4,3 +4,4 @@ storage
 credentials
 *.lock
 .idea
+.ropeproject
