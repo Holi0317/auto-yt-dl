@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-source env/bin/activate
-chmod +x main.py
-pip install youtube-dl pip --upgrade
+pipenv update youtube-dl
 
-./main.py || exit $?
+pipenv run python main.py || exit $?

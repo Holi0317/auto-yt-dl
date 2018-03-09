@@ -5,3 +5,4 @@ credentials
 *.lock
 .idea
 .ropeproject
+.mypy_cache
