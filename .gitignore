@@ -2,7 +2,7 @@ env
 client_id.json
 storage
 credentials
-*.lock
+auto-yt-dl.lock
 .idea
 .ropeproject
 .mypy_cache
