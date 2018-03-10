@@ -1,41 +1,46 @@
-#!/usr/bin/env python3
+"""
+Automatically download youtube video from given playlist.
 
-import argparse
-import os
+See README.md for setup details.
+"""
+
 import json
 import logging
+import os
 import sys
 
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.file import Storage
-from oauth2client import tools
+import youtube_dl
 from apiclient.discovery import build
 from httplib2 import Http
-import youtube_dl
 from youtube_dl.utils import DEFAULT_OUTTMPL
+
+from autodl import auth
 
 LOCK_FILE = 'auto-yt-dl.lock'
 YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.force-ssl'
 THIS_DIR = os.getcwd()
 
-parser = argparse.ArgumentParser(parents=[tools.argparser])
-flags = parser.parse_args()
-
 logger = logging.getLogger('auto-yt-dl')
 
 
 def set_logger():
+    """Set up logger handlers."""
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
-        '[%(asctime)s] [%(name)s / %(levelname)s] %(message)s',
-        '%H:%M:%S')
+        '[%(asctime)s] [%(name)s / %(levelname)s] %(message)s', '%H:%M:%S')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
-set_logger()
 
 
 def get_playlist(http, filter_fn):
+    """
+    Get playlist items from youtube.
+
+    Param:
+        http - urllib http object that is authorized
+        filter_fn - Filter function for list
+    """
     logger.debug('Getting playlists from youtube')
     youtube = build('youtube', 'v3', http=http)
     pl_list = youtube.playlists().list
@@ -45,8 +50,9 @@ def get_playlist(http, filter_fn):
     while 'nextPageToken' in response:
         logger.debug('Have next page token.')
         result += response['items']
-        response = pl_list(part='id,snippet', mine=True,
-                           pageToken=response['nextPageToken']).execute()
+        response = pl_list(
+            part='id,snippet', mine=True,
+            pageToken=response['nextPageToken']).execute()
     logger.debug('This is the last page of playlists.')
     result += response['items']
 
@@ -55,8 +61,13 @@ def get_playlist(http, filter_fn):
 
 
 def list_playlist(http, playlists):
-    """List playlist.
-    return: dict. key = playlist title. value = array of ids."""
+    """
+    List playlist.
+
+    Returns:
+        dict. key = playlist title. value = array of ids.
+
+    """
     logger.debug('Listing playlists.')
     youtube = build('youtube', 'v3', http=http)
     endpoint = youtube.playlistItems().list
@@ -73,8 +84,8 @@ def list_playlist(http, playlists):
         result_vid_id[title] = []
         logger.debug('Processing playlist: %s', title)
 
-        response = endpoint(part='id,snippet',
-                            playlistId=playlist['id']).execute()
+        response = endpoint(
+            part='id,snippet', playlistId=playlist['id']).execute()
 
         while 'nextPageToken' in response:
             logger.debug('Have next page token.')
@@ -82,8 +93,10 @@ def list_playlist(http, playlists):
             result_id[title] += list(map(lambda x: x['id'], response['items']))
             result_vid_id[title] += list(map(map_vid, response['items']))
 
-            response = endpoint(part='id,snippet', playlistId=playlist['id'],
-                                pageToken=response['nextPageToken']).execute()
+            response = endpoint(
+                part='id,snippet',
+                playlistId=playlist['id'],
+                pageToken=response['nextPageToken']).execute()
 
         result_id[title] += list(map(lambda x: x['id'], response['items']))
         result_vid_id[title] += list(map(map_vid, response['items']))
@@ -96,6 +109,12 @@ def list_playlist(http, playlists):
 
 
 def remove_playlist(http, playlist):
+    """
+    Clean up videos inside a youtube playlist.
+
+    Param:
+        playlist - Playlist id to be cleaned
+    """
     if not playlist:
         return
 
@@ -107,6 +126,7 @@ def remove_playlist(http, playlist):
 
 
 def normalize_path(path):
+    """Normalize a path."""
     p = os.path.expanduser(path)
     p = os.path.normpath(p)
     p = os.path.join(p, '')
@@ -114,9 +134,19 @@ def normalize_path(path):
 
 
 def download_videos(video_ids, dir_, options):
-    options['outtmpl'] = os.path.join(normalize_path(dir_), options.get('outtmpl', DEFAULT_OUTTMPL))
-    video_links = ['http://www.youtube.com/watch?v=' + video_id
-                   for video_id in video_ids]
+    """
+    Download videos from youtube.
+
+    Param:
+        video_ids - ID of videos to download
+        dir_ - Target directory
+        options - Options for youtube-dl
+    """
+    options['outtmpl'] = os.path.join(
+        normalize_path(dir_), options.get('outtmpl', DEFAULT_OUTTMPL))
+    video_links = [
+        'http://www.youtube.com/watch?v=' + video_id for video_id in video_ids
+    ]
     logger.info('Attempting to download videos. %s', video_links)
     logger.info('Video will be saved as %s', options['outtmpl'])
 
@@ -125,18 +155,12 @@ def download_videos(video_ids, dir_, options):
 
 
 def main():
+    """Entry point of the script."""
+    set_logger()
+
     logger.info('Started')
 
-    storage = Storage('credentials')
-    creds = storage.get()
-
-    if not creds or creds.invalid:
-        flow = flow_from_clientsecrets('client_id.json',
-                                       scope=YOUTUBE_SCOPE)
-        flow.params['access_type'] = 'offline'
-        creds = tools.run_flow(flow, storage, flags)
-        storage.put(creds)
-
+    creds = auth.get_cred()
     http = creds.authorize(Http())
 
     with open('config.json') as file:
@@ -144,8 +168,8 @@ def main():
     look_playlist = list(config.keys())
     logger.info('I will look for for playlists: {0}'.format(look_playlist))
 
-    playlists = get_playlist(http, lambda x: x['snippet']['title']
-                             in look_playlist)
+    playlists = get_playlist(http,
+                             lambda x: x['snippet']['title'] in look_playlist)
     pl_id, video_id = list_playlist(http, playlists)
 
     for name, setting in config.items():
@@ -169,3 +193,4 @@ if __name__ == '__main__':
     finally:
         logger.info('Cleaning up lock file.')
         os.remove(os.path.join(THIS_DIR, LOCK_FILE))
+

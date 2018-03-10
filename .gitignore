@@ -6,3 +6,4 @@ credentials
 .idea
 .ropeproject
 .mypy_cache
+__pycache__/
