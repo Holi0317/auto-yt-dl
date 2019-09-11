@@ -1,5 +1,14 @@
 #!/usr/bin/bash
 
-pipenv update youtube-dl
+set -e
 
-pipenv run python main.py || exit $?
+# Setup virtual environment if not exist
+if [ ! -d "env" ]; then
+  python -m venv env
+fi
+
+source env/bin/activate
+pip install -r requirements.txt --upgrade
+pip install youtube-dl --upgrade
+
+python main.py
